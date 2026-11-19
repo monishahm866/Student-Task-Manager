@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Task Manager</title>
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background: #f0f4f8; margin: 0; padding: 25px; color: #1e293b; }
+    .container { max-width: 1000px; margin: auto; background: #ffffff; padding: 30px; border-radius: 14px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08); }
+    .topbar { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 22px; flex-wrap: wrap; gap: 10px; }
+    .topbar h1 { margin: 0; color: #0f172a; font-size: 24px; }
+    .topbar p { margin: 4px 0 0; color: #64748b; font-size: 13px; }
+    .user-box { text-align: right; font-size: 13px; color: #334155; }
+    .btn-top { display: inline-block; margin-top: 6px; padding: 6px 12px; color: #fff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 12px; }
+    .remind-btn { background: #0ea5e9; margin-right: 5px; }
+    .remind-btn:hover { background: #0284c7; }
+    .logout-btn { background: #ef4444; }
+    .logout-btn:hover { background: #dc2626; }
+
+    .alert { padding: 11px 14px; border-radius: 8px; margin-bottom: 18px; font-size: 14px; font-weight: 600; }
+    .alert.success { background: #dcfce7; color: #15803d; }
+    .alert.error { background: #fee2e2; color: #b91c1c; }
+
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
+    .stat-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 16px; border-radius: 10px; text-align: center; }
+    .stat-card h2 { margin: 0; font-size: 26px; color: #2563eb; }
+    .stat-card.warn h2 { color: #dc2626; }
+    .stat-card.success h2 { color: #16a34a; }
+    .stat-card span { font-size: 13px; color: #475569; font-weight: 500; }
+
+    .add-form { display: grid; grid-template-columns: 2fr 1.2fr 1.1fr 1fr 1fr auto; gap: 10px; margin-bottom: 20px; background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; }
+    .filter-form { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+    .filter-form input { flex: 1; min-width: 200px; }
+    input, select, button { padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; }
+    input:focus, select:focus { border-color: #2563eb; }
+    button.btn-primary { background: #2563eb; color: #fff; border: none; font-weight: 600; cursor: pointer; }
+    button.btn-primary:hover { background: #1d4ed8; }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 13px 12px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
+    th { background: #f8fafc; color: #334155; font-weight: 600; }
+
+    .badge { padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; display: inline-block; }
+    .High { background: #fee2e2; color: #b91c1c; }
+    .Medium { background: #fef3c7; color: #b45309; }
+    .Low { background: #dcfce7; color: #15803d; }
+    .cat-tag { background: #e0e7ff; color: #3730a3; padding: 3px 8px; border-radius: 6px; font-size: 12px; font-weight: 500; }
+    .overdue-tag { color: #dc2626; font-weight: 700; font-size: 12px; }
+    .completed-row td { text-decoration: line-through; color: #94a3b8; }
+
+    .btn-sm { padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: 600; color: #fff; display: inline-block; margin-right: 4px; }
+    .btn-done { background: #16a34a; }
+    .btn-del { background: #dc2626; }
+
+    @media (max-width: 820px) {
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .add-form { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <div>
+        <h1>Student Task Manager</h1>
+        <p>Academic Assignments, Labs & Exam Tracker</p>
+      </div>
+      <div class="user-box">
+        <div>Welcome, <strong>{{ user_name }}</strong> ({{ user_email }})</div>
+        <a href="/send-reminder" class="btn-top remind-btn">Send Email Reminder</a>
+        <a href="/logout" class="btn-top logout-btn">Logout</a>
+      </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, msg in messages %}
+          <div class="alert {{ category }}">{{ msg }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="stats">
+      <div class="stat-card"><h2>{{ total }}</h2><span>Total Tasks</span></div>
+      <div class="stat-card"><h2>{{ pending }}</h2><span>Pending</span></div>
+      <div class="stat-card success"><h2>{{ done }}</h2><span>Completed</span></div>
+      <div class="stat-card warn"><h2>{{ overdue }}</h2><span>Overdue</span></div>
+    </div>
+
+    <form class="add-form" method="POST" action="/">
+      <input type="text" name="title" placeholder="Task title (e.g., DBMS Lab Record)" required />
+      <input type="text" name="subject" placeholder="Subject (e.g., CS301)" required />
+      <select name="category">
+        <option value="Assignment">Assignment</option>
+        <option value="Lab Record">Lab Record</option>
+        <option value="Exam Prep">Exam Prep</option>
+        <option value="Mini Project">Mini Project</option>
+      </select>
+      <select name="priority">
+        <option value="High">High Priority</option>
+        <option value="Medium" selected>Medium Priority</option>
+        <option value="Low">Low Priority</option>
+      </select>
+      <input type="date" name="due_date" required />
+      <button type="submit" class="btn-primary">+ Add Task</button>
+    </form>
+
+    <form class="filter-form" method="GET" action="/">
+      <input type="text" name="search" value="{{ search }}" placeholder="Search by task title or subject..." />
+      <select name="priority">
+        <option value="All" {% if priority_filter == 'All' %}selected{% endif %}>All Priorities</option>
+        <option value="High" {% if priority_filter == 'High' %}selected{% endif %}>High</option>
+        <option value="Medium" {% if priority_filter == 'Medium' %}selected{% endif %}>Medium</option>
+        <option value="Low" {% if priority_filter == 'Low' %}selected{% endif %}>Low</option>
+      </select>
+      <select name="status">
+        <option value="All" {% if status_filter == 'All' %}selected{% endif %}>All Status</option>
+        <option value="Pending" {% if status_filter == 'Pending' %}selected{% endif %}>Pending</option>
+        <option value="Completed" {% if status_filter == 'Completed' %}selected{% endif %}>Completed</option>
+      </select>
+      <button type="submit" class="btn-primary">Filter</button>
+    </form>
+
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Task Title</th>
+          <th>Subject</th>
+          <th>Category</th>
+          <th>Priority</th>
+          <th>Due Date</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for task in tasks %}
+        <tr class="{% if task.status == 'Completed' %}completed-row{% endif %}">
+          <td>{{ loop.index }}</td>
+          <td><strong>{{ task.title }}</strong></td>
+          <td>{{ task.subject }}</td>
+          <td><span class="cat-tag">{{ task.category }}</span></td>
+          <td><span class="badge {{ task.priority }}">{{ task.priority }}</span></td>
+          <td>
+            {{ task.due_date }}
+            {% if task.status == 'Pending' and task.due_date < today %}
+              <div class="overdue-tag">Overdue!</div>
+            {% endif %}
+          </td>
+          <td>{{ task.status }}</td>
+          <td>
+            <a class="btn-sm btn-done" href="/toggle/{{ task.id }}">{{ 'Undo' if task.status == 'Completed' else 'Done' }}</a>
+            <a class="btn-sm btn-del" href="/delete/{{ task.id }}">Delete</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" style="text-align:center; color:#64748b; padding:25px;">No tasks found. Add your first academic task above!</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

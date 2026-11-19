@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register - Student Task Manager</title>
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background: #f0f4f8; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+    .card { background: #fff; padding: 35px; border-radius: 14px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08); width: 100%; max-width: 400px; }
+    h2 { margin: 0 0 6px; text-align: center; color: #0f172a; }
+    p.sub { margin: 0 0 22px; text-align: center; color: #64748b; font-size: 14px; }
+    label { display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 5px; }
+    input { width: 100%; padding: 11px; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 15px; font-size: 14px; }
+    input:focus { border-color: #2563eb; outline: none; }
+    button { width: 100%; padding: 12px; background: #16a34a; color: #fff; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
+    button:hover { background: #15803d; }
+    .alert { padding: 10px; border-radius: 8px; font-size: 13px; margin-bottom: 15px; text-align: center; background: #fee2e2; color: #b91c1c; }
+    .footer-link { text-align: center; margin-top: 16px; font-size: 14px; color: #475569; }
+    .footer-link a { color: #2563eb; text-decoration: none; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Create Account</h2>
+    <p class="sub">Register with your student email</p>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for msg in messages %}
+          <div class="alert">{{ msg }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="/register">
+      <label>Full Name</label>
+      <input type="text" name="name" placeholder="e.g., Rahul Sharma" required />
+
+      <label>Email Address</label>
+      <input type="email" name="email" placeholder="student@college.edu" required />
+
+      <label>Password</label>
+      <input type="password" name="password" placeholder="Create a strong password" required />
+
+      <button type="submit">Register</button>
+    </form>
+
+    <div class="footer-link">
+      Already have an account? <a href="/login">Login here</a>
+    </div>
+  </div>
+</body>
+</html>
